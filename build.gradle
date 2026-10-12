@@ -1,3 +1,6 @@
+def jitpackGroup = System.getenv("GROUP")
+def jitpackArtifact = System.getenv("ARTIFACT")
+def jitpackVersion = System.getenv("VERSION")
 allprojects {
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
@@ -15,8 +18,10 @@ allprojects {
         enabled = false
         group = null
     }
-    version 'v5.4.0'
-    group 'com.github.InfinityLoop1308.PipePipeExtractor'
+      version = jitpackVersion ?: '1.1'
+    group = jitpackGroup && jitpackArtifact
+            ? "${jitpackGroup}.${jitpackArtifact}"
+            : 'com.github.lovelilke.PipePipeExtractor'
 
     repositories {
         mavenCentral()

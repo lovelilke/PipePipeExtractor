@@ -816,6 +816,85 @@ YoutubeParsingHelper {
         return youtubeMusicClientVersion;
     }
 
+    /**
+     * Extract a channel id (UCxxxx) from a navigation endpoint.
+     */
+    @Nullable
+    public static String getChannelIdFromNavigationEndpoint(
+            @Nullable final JsonObject navigationEndpoint) {
+        if (navigationEndpoint == null) {
+            return null;
+        }
+        final String direct = navigationEndpoint.getObject("browseEndpoint").getString("browseId");
+        if (direct != null && direct.startsWith("UC")) {
+            return direct;
+        }
+        final JsonObject listItem = navigationEndpoint.getObject("showDialogCommand")
+                .getObject("panelLoadingStrategy").getObject("inlineContent")
+                .getObject("dialogViewModel").getObject("customContent")
+                .getObject("listViewModel").getArray("listItems").getObject(0)
+                .getObject("listItemViewModel");
+        final String[] candidates = {
+                listItem.getObject("title").getArray("commandRuns").getObject(0)
+                        .getObject("onTap").getObject("innertubeCommand")
+                        .getObject("browseEndpoint").getString("browseId"),
+                listItem.getObject("rendererContext").getObject("commandContext")
+                        .getObject("onTap").getObject("innertubeCommand")
+                        .getObject("browseEndpoint").getString("browseId")
+        };
+        for (final String c : candidates) {
+            if (c != null && c.startsWith("UC")) {
+                return c;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Extract a channel id (UCxxxx) from a text object whose first run points to a channel.
+     */
+    @Nullable
+    public static String getChannelIdFromTextObject(@Nullable final JsonObject textObject) {
+        if (textObject == null || textObject.isEmpty() || !textObject.has("runs")) {
+            return null;
+        }
+        final JsonArray runs = textObject.getArray("runs");
+        if (runs == null || runs.isEmpty()) {
+            return null;
+        }
+        return getChannelIdFromNavigationEndpoint(
+                runs.getObject(0).getObject("navigationEndpoint"));
+    }
+
+    /**
+     * Extract a channel url from a text object whose first run points to a channel.
+     */
+    @Nullable
+    public static String getChannelUrlFromTextObject(@Nullable final JsonObject textObject)
+            throws ParsingException {
+        if (textObject == null || textObject.isEmpty() || !textObject.has("runs")) {
+            return null;
+        }
+        final JsonArray runs = textObject.getArray("runs");
+        if (runs == null || runs.isEmpty()) {
+            return null;
+        }
+        return getUrlFromNavigationEndpoint(runs.getObject(0).getObject("navigationEndpoint"));
+    }
+
+    /**
+     * Extract a channel id (UCxxxx) from a channel url.
+     */
+    @Nullable
+    public static String getChannelIdFromUrl(@Nullable final String url) {
+        if (url == null) {
+            return null;
+        }
+        final java.util.regex.Matcher m =
+                java.util.regex.Pattern.compile("/channel/(UC[\\w-]+)").matcher(url);
+        return m.find() ? m.group(1) : null;
+    }
+
     @Nullable
     public static String getUrlFromNavigationEndpoint(@Nonnull final JsonObject navigationEndpoint)
             throws ParsingException {

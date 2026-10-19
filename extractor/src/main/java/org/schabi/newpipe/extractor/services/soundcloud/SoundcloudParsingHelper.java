@@ -53,6 +53,8 @@ import static org.schabi.newpipe.extractor.utils.Utils.replaceHttpWithHttps;
 public final class SoundcloudParsingHelper {
     private static String clientId;
     public static final String SOUNDCLOUD_API_V2_URL = "https://api-v2.soundcloud.com/";
+    public static final String SOUNDCLOUD_SHORT_URL_PATTERN =
+            "^https?://on\\.soundcloud\\.com/[0-9a-zA-Z]+/?([#?].*)?$";
 
     private SoundcloudParsingHelper() {
     }
@@ -154,6 +156,19 @@ public final class SoundcloudParsingHelper {
             ParsingException {
         // Remove the tailing slash from URLs due to issues with the SoundCloud API
         String fixedUrl = urlString;
+        if (Parser.isMatch(SOUNDCLOUD_SHORT_URL_PATTERN, fixedUrl)) {
+            try {
+                final Response redirect = NewPipe.getDownloader().head(fixedUrl);
+                if (redirect.responseCode() >= 500) {
+                    throw new ParsingException("Could not follow on.soundcloud.com redirect: HTTP "
+                            + redirect.responseCode());
+                }
+                // SoundCloud may return 403 after redirecting; the final URL is still usable.
+                fixedUrl = redirect.latestUrl().split("\\?")[0];
+            } catch (final ReCaptchaException e) {
+                throw new ParsingException("Could not follow on.soundcloud.com redirect", e);
+            }
+        }
         if (fixedUrl.charAt(fixedUrl.length() - 1) == '/') {
             fixedUrl = fixedUrl.substring(0, fixedUrl.length() - 1);
         }

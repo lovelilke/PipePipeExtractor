@@ -10,7 +10,8 @@ public final class SoundcloudStreamLinkHandlerFactory extends LinkHandlerFactory
     private static final SoundcloudStreamLinkHandlerFactory INSTANCE
             = new SoundcloudStreamLinkHandlerFactory();
     private static final String URL_PATTERN = "^https?://(www\\.|m\\.)?soundcloud.com/[0-9a-z_-]+"
-            + "/(?!(tracks|albums|sets|reposts|followers|following)/?$)[0-9a-z_-]+/?([#?].*)?$";
+            + "/(?!(tracks|albums|sets|reposts|followers|following)/?$)[0-9a-z_-]+/?([#?].*)?$"
+            + "|" + SoundcloudParsingHelper.SOUNDCLOUD_SHORT_URL_PATTERN;
     private static final String API_URL_PATTERN = "^https?://api-v2\\.soundcloud.com"
             + "/(tracks|albums|sets|reposts|followers|following)/([0-9a-z_-]+)/";
     private SoundcloudStreamLinkHandlerFactory() {
